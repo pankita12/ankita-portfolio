@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ankita Pandey | Portfolio</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#0f172a;
+    color:white;
+    overflow:hidden;
+}
+
+/* PARTICLE CANVAS */
+#particles{
+    position:fixed;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    z-index:-1;
+}
+
+/* Apple-style sliding screens */
+.screen{
+    position:absolute;
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    text-align:center;
+    padding:20px;
+    transition:transform 0.8s cubic-bezier(.77,0,.18,1);
+}
+
+.hidden-right{ transform:translateX(100%); }
+.hidden-left{ transform:translateX(-100%); }
+.active{ transform:translateX(0); }
+
+.top-logo{
+    position:fixed;
+    top:20px;
+    left:20px;
+}
+.top-logo img{height:50px}
+
+#profilePic{
+    width:200px;
+    border-radius:20px;
+    margin-bottom:20px;
+    box-shadow:0 0 40px rgba(59,130,246,0.6);
+}
+
+#typing,#introText{
+    font-size:22px;
+    max-width:700px;
+    font-weight:300;
+}
+
+/* Buttons */
+button{
+    padding:10px 20px;
+    border:none;
+    border-radius:30px;
+    background:linear-gradient(45deg,#2563eb,#3b82f6);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    margin:8px;
+    transition:0.3s;
+}
+button:hover{
+    transform:translateY(-3px);
+    box-shadow:0 8px 25px rgba(59,130,246,0.6);
+}
+
+/* Glass Cards */
+.glass-box{
+    backdrop-filter:blur(15px);
+    background:rgba(255,255,255,0.05);
+    padding:50px 70px;
+    border-radius:25px;
+    border:1px solid rgba(255,255,255,0.1);
+    transition:0.4s;
+    cursor:pointer;
+}
+.glass-box:hover{
+    transform:scale(1.05);
+    background:rgba(255,255,255,0.08);
+}
+
+.big-options{
+    display:flex;
+    gap:80px;
+    margin-top:50px;
+}
+
+/* Dataset */
+.category-container{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    width:400px;
+}
+
+.category-box{
+    backdrop-filter:blur(10px);
+    background:rgba(255,255,255,0.05);
+    padding:20px;
+    border-radius:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+.category-box:hover{
+    transform:translateX(15px);
+    background:rgba(59,130,246,0.2);
+}
+
+.file-section{ width:650px; max-width:95%; }
+
+.file-item{
+    backdrop-filter:blur(10px);
+    background:rgba(255,255,255,0.05);
+    padding:15px;
+    border-radius:12px;
+    margin:10px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+input{
+    padding:8px;
+    border-radius:20px;
+    border:none;
+    margin:10px;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="top-logo">
+    <img src="images/accrevent-logo.png">
+</div>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen1">
+    <img src="images/profile.jpg" id="profilePic">
+    <div id="typing"></div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen hidden-right" id="screen2">
+    <img src="images/profile.jpg" id="profilePic">
+    <div id="introText"></div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen hidden-right" id="screen3">
+    <h2 id="finalGreeting"></h2>
+    <div class="big-options">
+        <div class="glass-box" onclick="openReport()">
+            <h2>INTERNSHIP REPORT</h2>
+        </div>
+        <div class="glass-box" onclick="openDataCategories()">
+            <h2>DATA LINKS</h2>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 4 -->
+<div class="screen hidden-right" id="screen4">
+    <h2>DATASET CATEGORIES</h2>
+    <div class="category-container">
+        <div class="category-box" onclick="openCategory('Windchill')">Windchill</div>
+        <div class="category-box" onclick="openCategory('Aras')">Aras</div>
+        <div class="category-box" onclick="openCategory('Enterprise Application')">Enterprise Application</div>
+        <div class="category-box" onclick="openCategory('Banking')">Banking</div>
+        <div class="category-box" onclick="openCategory('Other Files')">Other Files</div>
+    </div>
+    <button onclick="goBackMain()">Back</button>
+</div>
+
+<!-- SCREEN 5 -->
+<div class="screen hidden-right" id="screen5">
+    <div class="file-section">
+        <h2 id="categoryTitle"></h2>
+        <button onclick="showCreate()">Create File</button>
+        <button onclick="goBackCategories()">Back</button>
+
+        <div id="createForm" style="display:none;">
+            <input type="text" id="fileName" placeholder="File Name">
+            <input type="text" id="fileLink" placeholder="Paste Drive Link">
+            <button onclick="saveFile()">Save</button>
+        </div>
+
+        <h3>SAVED FILES</h3>
+        <div id="fileList"></div>
+    </div>
+</div>
+
+<script>
+const reportLink="PASTE_REPORT_LINK";
+let currentCategory="";
+
+/* APPLE STYLE SLIDE */
+function slideTo(current,next){
+    document.getElementById(current).classList.remove("active");
+    document.getElementById(current).classList.add("hidden-left");
+    document.getElementById(next).classList.remove("hidden-right");
+    document.getElementById(next).classList.add("active");
+}
+
+/* Typing */
+const welcome="✨ Welcome to my Introduction...";
+let i=0;
+function typeWelcome(){
+    if(i<welcome.length){
+        document.getElementById("typing").innerHTML+=welcome.charAt(i);
+        i++;
+        setTimeout(typeWelcome,60);
+    } else {
+        document.getElementById("typing").innerHTML+="<br><br>Press Enter";
+    }
+}
+
+document.addEventListener("keydown",e=>{
+if(e.key==="Enter" && document.getElementById("screen1").classList.contains("active")){
+slideTo("screen1","screen2");
+startIntro();
+}});
+
+function startIntro(){
+let text="Hi, I’m Ankita Pandey. I completed my six-month internship at Accrevent Private Limited, working on global market intelligence and B2B sales strategy. This portfolio presents my journey.";
+let j=0;
+function type(){
+if(j<text.length){
+document.getElementById("introText").innerHTML+=text.charAt(j);
+j++; setTimeout(type,40);
+}else{
+document.getElementById("introText").innerHTML+=`<br><br><input id="username" placeholder="Enter your name"><br><button onclick="goFinal()">Enter</button>`;
+}}
+type();
+}
+
+function goFinal(){
+let name=document.getElementById("username").value;
+if(name.trim()==="")return;
+slideTo("screen2","screen3");
+document.getElementById("finalGreeting").innerText="Hi "+name+" 👋 What do you want to explore?";
+}
+
+function openReport(){window.open(reportLink,"_blank")}
+function openDataCategories(){slideTo("screen3","screen4")}
+function goBackMain(){slideTo("screen4","screen3")}
+
+function openCategory(cat){
+currentCategory=cat;
+document.getElementById("categoryTitle").innerText=cat.toUpperCase();
+slideTo("screen4","screen5");
+loadFiles();
+}
+
+function goBackCategories(){slideTo("screen5","screen4")}
+function showCreate(){document.getElementById("createForm").style.display="block"}
+
+function saveFile(){
+let name=document.getElementById("fileName").value;
+let link=document.getElementById("fileLink").value;
+if(!name||!link)return;
+let files=JSON.parse(localStorage.getItem(currentCategory))||[];
+files.push({name,link});
+localStorage.setItem(currentCategory,JSON.stringify(files));
+loadFiles();
+}
+
+function loadFiles(){
+let list=document.getElementById("fileList");
+list.innerHTML="";
+let files=JSON.parse(localStorage.getItem(currentCategory))||[];
+files.forEach((f,i)=>{
+list.innerHTML+=`<div class="file-item"><b>${f.name}</b><div><button onclick="window.open('${f.link}','_blank')">Open</button><button onclick="deleteFile(${i})">Delete</button></div></div>`;
+});
+}
+
+function deleteFile(i){
+let files=JSON.parse(localStorage.getItem(currentCategory))||[];
+files.splice(i,1);
+localStorage.setItem(currentCategory,JSON.stringify(files));
+loadFiles();
+}
+
+window.onload=typeWelcome;
+
+/* PARTICLE SYSTEM */
+const canvas=document.getElementById("particles");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let particles=[];
+for(let i=0;i<80;i++){
+particles.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*2+1,
+dx:(Math.random()-0.5)*0.5,
+dy:(Math.random()-0.5)*0.5
+});
+}
+
+function animate(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="rgba(59,130,246,0.7)";
+particles.forEach(p=>{
+ctx.beginPath();
+ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+ctx.fill();
+p.x+=p.dx;
+p.y+=p.dy;
+if(p.x<0||p.x>canvas.width)p.dx*=-1;
+if(p.y<0||p.y>canvas.height)p.dy*=-1;
+});
+requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+</body>
+</html>
+ml>
